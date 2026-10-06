@@ -391,6 +391,19 @@ class MMM(RegressionModelBuilder):
         Configuration settings for the sampler.
     control_columns : list[str] or None
         Column names of control covariates to include in the model.
+
+        Unlike the target and the channels, control columns are used as they
+        are, without scaling. This is deliberate: a control enters the model
+        linearly, so its scale is absorbed by its coefficient, and you may want
+        to transform it yourself first. The ``gamma_control`` prior is stated on
+        the scaled target, though, and one prior is shared by every control, so
+        a control far outside the 0-1 range, such as a row index or a price,
+        gets a much wider effective prior than a 0/1 event dummy. Put such
+        columns on a comparable scale yourself (for example, divide each by its
+        maximum absolute value), give ``gamma_control`` a ``sigma`` per control,
+        or model a trend with a
+        :class:`~pymc_marketing.mmm.additive_effect.LinearTrendEffect` instead
+        of a time-index column.
     yearly_seasonality : int or None
         Number of Fourier modes for yearly seasonality.
     adstock_first : bool
@@ -3811,6 +3824,7 @@ class MMM(RegressionModelBuilder):
                 * `delta_x`: change in x axis value of the lift test.
                 * `delta_y`: change in y axis value of the lift test.
                 * `sigma`: standard deviation of the lift test.
+
             The optional ``date`` column is used for time-varying media.
             Other columns are ignored when saving calibration metadata.
         likelihood : Prior, optional
